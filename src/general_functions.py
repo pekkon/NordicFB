@@ -61,7 +61,7 @@ def sidebar_contact_info():
     mention(
         label="Source code",
         icon="github",
-        url="https://github.com/pekkon/EnergiaDataApp"
+        url="https://github.com/pekkon/NordicFB"
     )
     st.markdown('Data sources:  \n[JAO Publication tool](https://publicationtool.jao.eu/nordic/api)')
 

@@ -44,7 +44,7 @@ def get_puto_data(start, end):
             res = requests.api.get(url)
             res_decoded = res.content.decode('utf-8')
             response = json.loads(res_decoded)
-            df = df.append(pd.DataFrame(response['data']))
+            df = pd.concat([df, pd.DataFrame(response['data'])])
             skip += 10000
     return df
 
