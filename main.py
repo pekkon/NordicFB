@@ -50,6 +50,8 @@ def get_puto_data(start, end):
 
 data = get_puto_data(start_date, end_date)
 data['dateTimeUtc'] = pd.to_datetime(data['dateTimeUtc'])
+# Remove tz info from 'dateTimeUtc'
+data['dateTimeUtc'] = data['dateTimeUtc'].dt.tz_localize(None)
 data.set_index('dateTimeUtc', inplace=True)
 # Add multi-select filter for 'tso'
 tso_filter = st.sidebar.multiselect('Select TSO(s)', data['tso'].unique())
