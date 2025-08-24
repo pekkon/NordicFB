@@ -131,12 +131,17 @@ if len(tso_filter) > 0:
     data = data[data['tso'].isin(tso_filter)]
 #st.dataframe(data)
 
+#streamlit default colors
+colors = px.colors.qualitative.Plotly
+
+# assign certain colors to certain TSOs
+tso_colors = {'SVK': colors[9], 'Fingrid': colors[1], 'Statnett': colors[0], 'Energinet': colors[6]}
 # combine biddingZoneFrom and biddingZoneTo to create a new column 'AreaFromTo'
 data['AreaFromTo'] = data['biddingZoneFrom'] + ' - ' + data['biddingZoneTo']
 
 tab1, tab2 = st.tabs(['Shadow price', 'Data for selected CNECs'],)
 with tab1:
-    shadow_prices = data.groupby(["cnecName"])["shadowPrice"].sum().reset_index()
+    shadow_prices = data.groupby(["cnecName", "AreaFromTo"])["shadowPrice"].sum().reset_index()
 
     #shadow_prices.set_index('dateTimeUtc', inplace=True)
     #filt
@@ -152,7 +157,7 @@ with tab1:
 
 
     with chart_container(data, ["Chart 📈", "Data 📄", "Download 📁"], ["CSV"]):
-        shadow_prices = shadow_prices.sort_values('shadowPrice', ascending=True)
+        shadow_prices = shadow_prices.sort_values('shadowPrice', ascending=False)
         #fig = px.bar(shadow_prices, y='cnecName', x='shadowPrice', orientation='h', hover_data=[shadow_prices.index],
                    # title="Cumulative shadow prices for each CNE", height=1000)
         
@@ -171,17 +176,26 @@ with tab1:
         st.plotly_chart(fig_tso, use_container_width=True)
 
         #plot each cnec shadow price
-        cnecs = shadow_prices['cnecName'].unique()
-        fig2 = go.Figure()
-        for cnec in cnecs:
-            temp_data = shadow_prices[shadow_prices['cnecName'] == cnec]
-        
-            fig2.add_trace(go.Scatter(x=temp_data.index, y=temp_data['shadowPrice'], mode='markers+lines', name=cnec,
-                                    connectgaps=False))
-        
-        fig2.update_layout(dict(yaxis_title='Shadow Price €/MW', xaxis_title='Time', legend_title="CNEC name"
-                                ,hovermode="x unified"))
-        fig2.update_layout(xaxis={'categoryorder':'total descending'}, yaxis={'categoryorder':'total descending'})
+        #cnecs = shadow_prices['cnecName'].unique()
+
+        # filter only top 100 cnecs
+        cnecs = shadow_prices['cnecName'].unique()[:100]
+        # Use px.bar to plot top 100 CNECs by shadow price
+        fig2 = px.bar(
+            shadow_prices[shadow_prices['cnecName'].isin(cnecs)],
+            y='cnecName',
+            x='shadowPrice',
+            title="Top 100 CNECs by Cumulative Shadow Price",
+            orientation='h', height=2000,
+            hover_data=['cnecName', 'shadowPrice', 'AreaFromTo']
+        )
+        fig2.update_layout(
+            yaxis={'categoryorder': 'total ascending'},
+            xaxis={'categoryorder': 'total ascending'},
+            yaxis_title='Shadow Price €/MW',
+            xaxis_title='CNEC name',
+            legend_title="CNEC name",
+        )
         st.plotly_chart(fig2, use_container_width=True)
 
 with tab2:
